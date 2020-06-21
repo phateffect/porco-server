@@ -1,0 +1,6 @@
+import os
+
+__curdir__ = os.path.abspath(os.path.dirname(__file__))
+
+SQLALCHEMY_DATABASE_URI = f"sqlite:///{__curdir__}/dev.db"
+SECRET_KEY = "REPLACE-ME"

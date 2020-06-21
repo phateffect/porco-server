@@ -1,0 +1,19 @@
+[[source]]
+name = "pypi"
+url = "https://pypi.doubanio.com/simple"
+verify_ssl = true
+
+[dev-packages]
+
+[packages]
+flask = "*"
+flask-caching = "*"
+flask-migrate = "*"
+flask-sqlalchemy = "*"
+flask-cors = "*"
+arrow = "*"
+blinker = "*"
+flask-admin = "*"
+
+[requires]
+python_version = "3.8"
