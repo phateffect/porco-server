@@ -1,3 +1,5 @@
+import json
+
 from porco.ext import db
 from porco.mixins import BasicMixin, JsonField
 
@@ -62,9 +64,9 @@ class LiveShow(db.Model, BasicMixin):
         self.approval = data["approval"]
 
         # 预计开播时间
-        self.estimated_start_at = data["appointmentTime"]
-        self.start_at = data["startTime"]
-        self.end_at = data["endTime"]
+        self.estimated_start_at = data["appointmentTime"] / 1000
+        self.start_at = data["startTime"] / 1000
+        self.end_at = data["endTime"] / 1000
         self.duration = data["timeLength"]
 
         self.room_type = data["roomType"]
@@ -85,9 +87,12 @@ class LiveShow(db.Model, BasicMixin):
         self.feed_detail = data["nativeFeedDetailUrl"]
         self.game_id = data["gameId"]
 
-        self.video_id = data["videoId"]
+        video_id = data["videoId"]
+        if video_id == "undefined":
+            video_id = None
+        self.video_id = video_id
         self.video_status = data["videoStatus"]
-        self.video_play_url = data["videoPlayUrl"]
+        self.video_play_url = data.get("videoPlayUrl")
         self.rate_adapt = data["rateAdapte"]
         self.publish_source = data["publishSource"]
         self.is_h265 = data["h265"]
@@ -101,4 +106,70 @@ class LiveShow(db.Model, BasicMixin):
             seller=dict(id=self.seller_id, nick=self.seller_nick),
             title=self.title,
             estimated_start_at=self.estimated_start_at,
+        )
+
+
+class Comment(db.Model, BasicMixin):
+    id = None  # hack
+    show_id = db.Column(db.String(32), primary_key=True, nullable=False)
+    comment_id = db.Column(db.String(32), primary_key=True, nullable=False)
+
+    timestamp = db.Column(db.Integer, default=0)
+    content = db.Column(db.UnicodeText, default="")
+
+    from_anchor = db.Column(db.Boolean, default=False)
+    private = db.Column(db.Boolean, default=False)
+    reply_to_comment = db.Column(db.String(32), default="")
+    reply_to_user_id = db.Column(db.String(32), default="")
+
+    user_id = db.Column(db.String(32), index=True)
+    user_nick = db.Column(db.Unicode(32), index=True)
+    sns_nick = db.Column(db.Unicode(32), default="")
+    taoqihi = db.Column(db.Integer, default=0)
+    account_id = db.Column(db.String(32), default="")
+    os = db.Column(db.String(32), default="")
+
+    fan_score = db.Column(db.Integer, default=0)
+    fan_level = db.Column(db.Integer, default=0)
+    vip_user = db.Column(db.String(32))
+
+    __table_args__ = (
+        db.Index("idx_show_comment", show_id, comment_id),
+    )
+
+    def update(self, data):
+        user = data["renders"]
+        reply = user.get("reply")
+        if reply is not None:
+            reply = json.loads(reply)
+        else:
+            reply = {}
+        device = json.loads(user["origin"].split("|")[2])
+
+        self.timestamp = int(data["timestamp"]) / 1000
+        self.content = data["content"]
+
+        self.from_anchor = user.get("render_anchor") == "true"
+        self.private = user.get("private") == "true"
+        self.reply_type = reply.get("targetType")
+        self.reply_to_comment = reply.get("replyToCommentId")
+        self.reply_to_user_id = reply.get("replyToUserId")
+
+        self.user_id = data["publisherId"]
+        self.user_nick = data["publisherNick"]
+        self.sns_nick = user.get("snsNick")
+
+        self.taoqihi = user["taoqihi"]
+        self.account_id = device["account_id"]
+        self.os = device["os"]
+
+        self.fan_score = int(user.get("fanScore", 0))
+        self.fan_level = int(user.get("fanLevel", 0))
+        self.vip_user = user["VIP_USER"]
+
+    def to_dict(self):
+        return dict(
+            show_id=self.show_id,
+            comment_id=self.comment_id,
+            content=self.content,
         )

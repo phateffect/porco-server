@@ -1,4 +1,6 @@
+import arrow
 import time
+
 from porco.constants import __config__
 
 
@@ -9,3 +11,7 @@ def load_config(app):
 
 def get_ts():
     return int(time.time())
+
+
+def format_ts(ts, fmt="YYYY-MM-DD HH:mm:ss"):
+    return arrow.get(ts).to("Asia/Shanghai").format(fmt)
