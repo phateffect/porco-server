@@ -163,8 +163,8 @@ class Comment(db.Model, BasicMixin):
         self.account_id = device["account_id"]
         self.os = device["os"]
 
-        self.fan_score = int(user.get("fanScore", 0))
-        self.fan_level = int(user.get("fanLevel", 0))
+        self.fan_score = int(user.get("fanScore") or 0)
+        self.fan_level = int(user.get("fanLevel") or 0)
         self.vip_user = user["VIP_USER"]
 
     def to_dict(self):
