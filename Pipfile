@@ -14,6 +14,7 @@ flask-cors = "*"
 arrow = "*"
 blinker = "*"
 flask-admin = "*"
+requests = "*"
 
 [requires]
 python_version = "3.8"
